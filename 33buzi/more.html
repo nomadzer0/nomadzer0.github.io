@@ -1,0 +1,130 @@
+<!doctype>
+<html>
+<head>
+    <title>Step 6</title>
+    <style>
+        body, html { height: 100%; }
+        body { margin: 0; padding: 0; box-sizing: border-box; font: 600 14px Arial, sans-serif; color: #fff; }
+        #container { max-width: 600px; margin: 0 auto; }
+        svg { width: 200px; height: 220px; stroke: #333; stroke-width: 4; fill: none; stroke-linecap: round; }
+        .part { display: none; }
+        #word { font-size: 40px; letter-spacing: 8px; color: #333; margin: 20px 0; min-height: 50px; }
+        #keys { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+        #keys button { width: 40px; height: 40px; font-size: 18px; border: 0; border-radius: 6px; background: #ddd; cursor: pointer; }
+        #keys button:disabled { cursor: default; opacity: .4; }
+        #keys button.hit { background: #4caf50; color: #fff; opacity: 1; }
+        #keys button.miss { background: #e53935; color: #fff; opacity: 1; }
+        #message { font-size: 18px; min-height: 24px; margin: 20px 0 0; }
+        .btn {
+            background: blue;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 30px;
+            color: #fff;
+            padding: 20px 30px;
+            margin: 20px 0 0;
+            border: 0;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+        }
+        a.btn.disabled { background: #bbb; pointer-events: none; cursor: not-allowed; }
+        #restart { font-size: 16px; padding: 10px 20px; background: #666; display: none; }
+    </style>
+</head>
+<body>
+<section id="container">
+    <p>Guess the word to continue. You have 6 wrong guesses.</p>
+    <svg viewBox="0 0 200 220">
+        <path d="M20 210 H120 M70 210 V20 H150 V45"/>
+        <circle class="part" cx="150" cy="65" r="20"/>
+        <path class="part" d="M150 85 V140"/>
+        <path class="part" d="M150 100 L125 125"/>
+        <path class="part" d="M150 100 L175 125"/>
+        <path class="part" d="M150 140 L128 180"/>
+        <path class="part" d="M150 140 L172 180"/>
+    </svg>
+    <div id="word"></div>
+    <div id="keys"></div>
+    <p id="message"></p>
+    <div id="next"></div>
+    <br>
+    <button id="restart" class="btn" type="button">Try again</button>
+</section>
+<script>
+    var WORD = 'KARLOVYVARY';
+    var MAX_WRONG = 6;
+    var guessed, wrong;
+
+    var wordEl = document.getElementById('word');
+    var keysEl = document.getElementById('keys');
+    var msgEl = document.getElementById('message');
+    var nextEl = document.getElementById('next');
+    var restartEl = document.getElementById('restart');
+    var parts = document.querySelectorAll('.part');
+
+    function render() {
+        var done = true;
+        wordEl.textContent = WORD.split('').map(function (c) {
+            if (guessed.indexOf(c) > -1) return c;
+            done = false;
+            return '_';
+        }).join(' ');
+        for (var i = 0; i < parts.length; i++) {
+            parts[i].style.display = i < wrong ? 'block' : 'none';
+        }
+        var lost = wrong >= MAX_WRONG;
+        if (done) msgEl.textContent = 'You got it! 🎉';
+        else if (lost) msgEl.textContent = 'Game over. The word was ' + WORD + '.';
+        else msgEl.textContent = '';
+        var over = done || lost;
+        Array.prototype.forEach.call(keysEl.children, function (b) {
+            if (over) b.disabled = true;
+        });
+        nextEl.innerHTML = '';
+        if (done) {
+            var a = document.createElement('a');
+            a.className = 'btn';
+            a.textContent = 'Continue';
+            a.href = atob('a2FybG92eXZhcnkuaHRtbA==');
+            nextEl.appendChild(a);
+        }
+        restartEl.style.display = lost ? 'inline-block' : 'none';
+    }
+
+    function guess(letter, btn) {
+        guessed.push(letter);
+        btn.disabled = true;
+        if (WORD.indexOf(letter) > -1) btn.className = 'hit';
+        else { btn.className = 'miss'; wrong++; }
+        render();
+    }
+
+    function start() {
+        guessed = [];
+        wrong = 0;
+        keysEl.innerHTML = '';
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(function (l) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = l;
+            b.onclick = function () { guess(l, b); };
+            keysEl.appendChild(b);
+        });
+        render();
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        var l = e.key.toUpperCase();
+        if (!/^[A-Z]$/.test(l)) return;
+        var b = keysEl.children[l.charCodeAt(0) - 65];
+        if (b && !b.disabled) guess(l, b);
+    });
+    restartEl.onclick = start;
+
+    start();
+</script>
+</body>
+</html>
